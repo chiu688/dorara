@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>哆啦啦股東會代領系統</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+        .nav { background: #007AFF; color: white; padding: 15px; display: flex; justify-content: space-between; }
+        .container { max-width: 900px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        
+        /* 列印格式設定 */
+        .print-area { display: grid; gap: 5mm; margin-top: 20px; }
+        .grid-1 { grid-template-columns: 1fr; }
+        .grid-6 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
+        .grid-8 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); }
+        .grid-10 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, 1fr); }
+        .ticket { border: 1px dashed #333; padding: 10px; height: 50mm; box-sizing: border-box; }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            .container { box-shadow: none; width: 100%; max-width: none; margin: 0; padding: 0; }
+            @page { size: A4; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav no-print">
+    <strong>哆啦啦 Dora-la 管理系統</strong>
+    <div id="userInfo">會員編號: DLA-001 | <a href="#" style="color:white">修改資料</a></div>
+</div>
+
+<div class="container">
+    <div id="loginSection" class="card no-print">
+        <h3>會員登入</h3>
+        <input type="text" id="uid" placeholder="會員編號">
+        <input type="password" id="pwd" placeholder="密碼">
+        <button onclick="alert('登入成功')">登入</button>
+    </div>
+
+    <div class="card no-print">
+        <h3>電投表 AI 自動辨識</h3>
+        <input type="file" id="fileInput">
+        <div style="margin: 10px 0;">
+            <label><input type="checkbox" id="south"> 桃園以南領取(+$2)</label>
+            <label><input type="checkbox" id="original"> 需證件正本(+$2)</label>
+        </div>
+        <button onclick="uploadFile()">開始辨識與分類</button>
+        <div id="status"></div>
+    </div>
+
+    <div class="card no-print">
+        <h3>列印議決表排版</h3>
+        選擇格式：
+        <button onclick="setGrid(1)">單頁</button>
+        <button onclick="setGrid(6)">1頁6格</button>
+        <button onclick="setGrid(8)">1頁8格</button>
+        <button onclick="setGrid(10)">1頁10格</button>
+        <button onclick="window.print()" style="background:#28a745; color:white;">🖨️ 立即列印</button>
+    </div>
+
+    <div id="printTarget" class="print-area grid-6">
+        <div class="ticket"><h3>公司: 2330 台積電</h3><p>股東: 王小明</p><p>紀念品: 物品 ($12.5)</p></div>
+        <div class="ticket"><h3>公司: 2881 富邦金</h3><p>股東: 王小明</p><p>紀念品: 禮物卡 ($10.5)</p></div>
+    </div>
+</div>
+
+<script>
+    async function uploadFile() {
+        const file = document.getElementById('fileInput').files[0];
+        if(!file) return alert('請先選擇檔案');
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('is_south', document.getElementById('south').checked);
+        formData.append('is_original', document.getElementById('original').checked);
+
+        document.getElementById('status').innerText = 'AI 辨識中...';
+        
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        document.getElementById('status').innerText = `辨識成功！公司：${data.code}，收費：$${data.fee}`;
+    }
+
+    function setGrid(num) {
+        document.getElementById('printTarget').className = 'print-area grid-' + num;
+    }
+</script>
+
+</body>
+</html>
